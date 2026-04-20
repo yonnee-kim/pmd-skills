@@ -64,11 +64,23 @@ posterior(doc↔code 정합성)는 `pyramid-sync`와 Stop hook의 몫 — 여기
 - 수정은 한 섹션씩, 매번 확인
 
 ### distill
+Scope를 먼저 판별 — 사용자 요청과 대상 규모로 결정.
+
+**single-module** (기본): 한 모듈·작은 디렉토리의 코드 → L2 모듈 파일 역추출
 - 대상 코드 파일·디렉토리 확인 후 Read
 - 공개 export/class·함수 이름 + 암묵적 invariant 추출
 - L2 모듈 파일 초안(`_docs/L2-spec/modules/{module}.md`) 작성, frontmatter `implements:`에 실제 파일 경로
 - 시그니처·내부 알고리즘은 복붙하지 말 것 — 코드가 진실 소스
 - 사용자 검토 후 상위(L1/L0) 연결 보강 요청
+
+**whole-project** (기존 대형 프로젝트에 pyramid 처음 도입): bottom-up migration
+1. 구조 스캔 — `git ls-files`·Glob로 디렉토리 트리·엔트리포인트 파악. 파일 수·언어·주요 폴더 요약을 사용자에게 제시
+2. 모듈 경계 후보 제시 — 디렉토리·import 그래프에서 자연스러운 경계 추정해 사용자에게 확인 받음 ("이 폴더를 한 모듈로?", "이 둘을 분리?"). 확정 전까지 Write 금지
+3. 모듈별 L2 스텁 생성 — 확정된 각 모듈에 대해 `_docs/L2-spec/modules/{module}.md` Write (`implements:` 포함). 시그니처·세부는 생략, 공개 경계 이름만
+4. Cross-cutting 문서 — 기존 `firestore.rules`·`openapi.yaml` 등 있으면 `db_schema.md`·`api_schema.md`로 역추출
+5. L1 원칙 역추출 — 코드에서 나타나는 기술 스택·패턴을 사용자에게 확인(추측 금지). 원칙·제약·범위를 대화로 확립
+6. L0 vision·origin — 사용자 대화. 코드만으로 추정 금지
+7. 이후 posterior(`pyramid-sync` + hook)가 drift 보정 — 초기 L2가 얇아도 자연스럽게 수렴
 
 ## Gotchas
 
