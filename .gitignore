@@ -1,5 +1,4 @@
 .DS_Store
 .pyramid/
-pmd-example/
 __pycache__/
 *.pyc
