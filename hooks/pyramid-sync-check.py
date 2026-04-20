@@ -39,6 +39,7 @@ def changed_files(root: Path) -> set[str]:
 FM_SPLIT = re.compile(r"^---\s*$", re.M)
 IMPL_BLOCK = re.compile(r"^implements:\s*\n((?:[ \t]*-[ \t]*.+\n?)+)", re.M)
 IMPL_INLINE = re.compile(r"^implements:\s*\[(.+?)\]\s*$", re.M)
+ID_FIELD = re.compile(r"^id:\s*(.+?)\s*$", re.M)
 
 
 def parse_implements(fm_text: str) -> list[str]:
@@ -103,6 +104,30 @@ def _debug(msg: str) -> None:
         print(f"[pyramid-sync debug] {msg}", file=sys.stderr)
 
 
+def _lint_ids(docs: list[Path]) -> None:
+    """Lint: id field matches filename stem; no duplicate ids. Debug-only output."""
+    seen: dict[str, str] = {}
+    for doc in docs:
+        try:
+            text = doc.read_text(encoding="utf-8", errors="ignore")[:2048]
+        except Exception:
+            continue
+        parts = FM_SPLIT.split(text, maxsplit=2)
+        if len(parts) < 3:
+            continue
+        m = ID_FIELD.search(parts[1])
+        if not m:
+            continue
+        did = m.group(1).strip().strip("'\"")
+        stem = doc.stem
+        if did != stem:
+            _debug(f"lint: id '{did}' != filename stem '{stem}' in {doc}")
+        if did in seen:
+            _debug(f"lint: duplicate id '{did}' in {doc} (first seen: {seen[did]})")
+        else:
+            seen[did] = str(doc)
+
+
 def main() -> None:
     if not run(["git", "rev-parse", "--git-dir"]).strip():
         _debug("not inside a git repo — exit")
@@ -126,6 +151,7 @@ def main() -> None:
 
     index = build_index(docs)
     _debug(f"index entries (code→doc): {len(index)}")
+    _lint_ids(docs)
     if not index:
         return
 
