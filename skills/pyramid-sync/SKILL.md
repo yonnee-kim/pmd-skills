@@ -19,12 +19,38 @@ description: 계약 문서(L2 모듈 등)와 구현 코드 간 drift 감지·해
 
 코드의 export/class/interface/함수 이름·invariant를 추출해 계약 문서의 "공개 경계"·"Invariants" 섹션과 대조. **구체 시그니처는 코드가 진실 소스** — 문서와 시그니처가 다르다고 drift로 판정하지 말 것. 이름·불변식 수준에서만 비교.
 
-- `code-ahead` — 코드에 있음, 문서에 없음 → 문서 "공개 경계"에 이름 추가 제안
-- `doc-ahead` — 문서에 있음, 코드에 없음 → 미구현 API 리스트로 남김
-- `divergent` — 이름은 같으나 invariant/책임이 어긋남 → 사용자에게 기준 선택 요청
-- `path-stale` — `implements` 경로에 코드 없음 → 경로 수정 또는 `implements` 제거
+- `code-ahead` — 코드에 있음, 문서에 없음
+- `doc-ahead` — 문서에 있음, 코드에 없음
+- `divergent` — 이름은 같으나 invariant/책임이 어긋남
+- `path-stale` — `implements` 경로에 코드 없음
 
 자동 판정 우기지 말 것 — 애매하면 상황을 제시하고 물을 것.
+
+## Direction별 해소 단계
+
+### code-ahead
+1. 새 export가 **의도한 공개 API**인지 사용자 확인 — 내부용이면 `_` prefix 또는 export 제거(코드 쪽 수정)
+2. 공개 API면 대상 문서 "공개 경계"에 이름 + 한 줄 설명 추가 (시그니처 복붙 금지)
+3. 새 invariant가 필요하면 "Invariants" 섹션에 추가
+4. 한 섹션씩 Edit, 매번 사용자 확인
+
+### doc-ahead
+1. 해당 항목이 **여전히 계획 중인지** 사용자 확인 — 폐기됐으면 문서에서 제거
+2. 계획 유지면 그대로 둠 (doc-ahead는 정상 lifecycle). `TODO(why)` 주석 허용
+3. 일정이 모호해지면 L1 `scope.md`의 v1 범위 재배치 검토 제안
+
+### divergent
+1. 코드·문서 양쪽 의미를 나란히 제시 (1~3줄 차이 요약)
+2. **기준을 사용자에게 선택 요청** — 코드 기준(문서 맞춤) vs 문서 기준(코드 맞춤)
+3. 선택된 쪽만 수정. 절충 금지 (drift 원흉)
+4. 수정 후 다시 실행하여 clean 확인
+
+### path-stale
+1. 이동·리네임 여부 확인 — `git log --follow`·grep. 이동이면 `implements:` 경로만 수정
+2. 삭제면 `implements:` 리스트에서 제거. 모듈 전체 소멸이면 문서 파일도 제거 검토
+3. 오타면 직접 수정. 외부 리소스(rules 파일 등)는 실제 경로 확인 후 수정
+
+모든 direction 공통: 한 파일씩 Edit, 매 수정마다 재실행으로 sync 확인.
 
 ## 출력
 
