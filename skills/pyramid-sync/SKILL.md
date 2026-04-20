@@ -43,6 +43,20 @@ description: 계약 문서(L2 모듈 등)와 구현 코드 간 drift 감지·해
 - 코드 수정 시 다른 코드를 "정리"하지 말 것 (surgical)
 - **시그니처를 문서에 복붙하지 말 것** — drift 반복 원인
 
+## 진단 ("왜 hook이 안 떠요?")
+
+사용자가 hook 동작이 의심되면 debug 실행:
+
+```
+PYRAMID_SYNC_DEBUG=1 python3 ${CLAUDE_PLUGIN_ROOT}/hooks/pyramid-sync-check.py
+```
+
+stderr에 각 단계 결과가 출력된다 (stdout·캐시엔 영향 없음). 흔한 원인:
+- `changed files: 0` — 작업 트리 clean. git staged·untracked 모두 비어있음
+- `contract docs discovered: 0` — `implements:` 필드 있는 문서가 tracked `.md`에 없음 (frontmatter 오타, gitignored, 새 파일이 아직 `git add` 안 됨)
+- `index entries: 0` — 문서는 있으나 `implements:` 파싱 실패 (YAML 오타)
+- `drift: 0` — 변경 파일이 매핑에 없음 (정상: 매핑 밖 파일만 수정됨)
+
 ## Gotchas
 
 - `implements` 누락된 문서는 인덱스에 없음 → 미탐지. prior 엔진(`pyramid`)에서 메타데이터 보강 요청

@@ -98,27 +98,39 @@ def build_index(docs: list[Path]) -> dict[str, list[str]]:
     return idx
 
 
+def _debug(msg: str) -> None:
+    if os.environ.get("PYRAMID_SYNC_DEBUG", "").strip() in ("1", "true", "yes"):
+        print(f"[pyramid-sync debug] {msg}", file=sys.stderr)
+
+
 def main() -> None:
     if not run(["git", "rev-parse", "--git-dir"]).strip():
+        _debug("not inside a git repo — exit")
         return
     root_s = run(["git", "rev-parse", "--show-toplevel"]).strip()
     if not root_s:
+        _debug("git toplevel not found — exit")
         return
     root = Path(root_s)
+    _debug(f"root={root}")
 
     changed = changed_files(root)
+    _debug(f"changed files: {len(changed)} ({sorted(changed)[:5]}{'...' if len(changed) > 5 else ''})")
     if not changed:
         return
 
     docs = find_contract_docs(root)
+    _debug(f"contract docs discovered: {len(docs)}")
     if not docs:
         return
 
     index = build_index(docs)
+    _debug(f"index entries (code→doc): {len(index)}")
     if not index:
         return
 
     drift = [f for f in changed if f in index]
+    _debug(f"drift: {len(drift)} ({drift})")
     if not drift:
         return
 
