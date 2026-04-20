@@ -13,7 +13,7 @@
 ## 파일 맵 (Claude Code 플러그인)
 
 - `.claude-plugin/plugin.json` — 플러그인 매니페스트
-- `skills/pyramid/` — prior 엔진 (SKILL.md + layers/L{0..3}.md)
+- `skills/pyramid/` — prior 엔진 (SKILL.md + layers/L{0,1,2}.md)
 - `skills/pyramid-sync/` — posterior 엔진 (SKILL.md)
 - `hooks/hooks.json` — Stop hook 선언
 - `hooks/pyramid-sync-check.py` — Stop hook 스크립트
@@ -27,7 +27,7 @@ Hook 동작 확인 (직접 실행, 플러그인 로드 없이):
 # silent (매핑 없음)
 python3 hooks/pyramid-sync-check.py; echo $?
 
-# positive (임시 레포에 L3 + implements 추가 후)
+# positive (임시 레포에 계약 문서 + implements 추가 후)
 ```
 
 ## 스킬 자체를 개선할 때

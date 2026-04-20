@@ -4,18 +4,19 @@
 
 ## 왜 필요한가
 
-Hook이 값싼 drift 감지를 하려면 "변경된 코드 파일 → 해당 L3 문서"를 O(1)로 역매핑해야 한다. 매핑이 prior 문서에 구조적으로 내장돼야 전체 시스템이 성립한다.
+Hook이 값싼 drift 감지를 하려면 "변경된 코드 파일 → 해당 계약 문서"를 O(1)로 역매핑해야 한다. 매핑이 prior 문서에 구조적으로 내장돼야 전체 시스템이 성립한다.
 
 ## 필드
 
-L3 문서 frontmatter에 `implements` 필드를 둔다. L0~L2에는 두지 않는다.
+계약 문서 frontmatter에 `implements:` 필드를 둔다. **layer 무관** — 이 필드가 있는 문서는 모두 "계약"으로 간주 (기본 레이어 구조에선 L2 모듈 파일).
 
 ```yaml
 ---
-layer: L3
+layer: L2
+id: route
 implements:
-  - src/auth/login.ts
-  - src/auth/session.ts
+  - lib/route/store.ts
+  - lib/route/types.ts
 ---
 ```
 
@@ -27,44 +28,42 @@ implements:
 
 ## 역매핑 인덱스
 
-Hook·sync 스킬은 전체 L3 문서를 스캔하여 `code_path → L3_doc_path` 맵을 구성한다.
+Hook·sync 스킬은 `implements:`가 있는 모든 문서를 스캔하여 `code_path → doc_path` 맵을 구성한다.
 
 - 출력: 메모리 내 dict. 파일 시스템 캐시 없음 (세션당 재계산, git diff 범위 작아서 무시 가능)
-- 충돌 처리: 같은 코드 파일이 2개 이상 L3에 `implements`로 걸리면 양쪽 모두 drift 체크 대상
+- 충돌 처리: 같은 코드 파일이 2개 이상 문서에 `implements`로 걸리면 양쪽 모두 drift 체크 대상
 
 ## 문서 루트 탐색
 
-L3 문서 위치 컨벤션은 `_docs/L3/*.md` (L0·L1·L2와 동일 루트 `_docs/` 하위).
+문서 위치 컨벤션은 `_docs/L2-spec/modules/{module}.md` (L0·L1과 동일 루트 `_docs/` 하위).
 
-탐색은 content-based — path 관례가 아니라 **frontmatter `layer: L3`**가 SSOT 신호. 즉 `git ls-files *.md`로 tracked `.md`만 긁은 뒤 frontmatter에 `layer: L3`가 있는 것만 인덱스. gitignore 자동 존중, 관례 이탈(예: 모듈별 co-location `src/foo/_docs/bar.md`)도 자연스럽게 흡수.
+탐색은 content-based — path 관례가 아니라 **frontmatter `implements:` 필드**가 SSOT 신호. `git ls-files *.md`로 tracked `.md`만 긁은 뒤 frontmatter에 `implements:`가 있는 것만 인덱스. gitignore 자동 존중, 관례 이탈(예: 모듈별 co-location `src/foo/_docs/contract.md`)도 자연스럽게 흡수.
 
-Override: 환경 변수 `PYRAMID_L3_GLOB` 설정 시 그 glob 결과만 사용 (content 체크 생략, 사용자 책임).
+Override: 환경 변수 `PYRAMID_CONTRACT_GLOB` 설정 시 그 glob 결과만 사용 (content 체크 생략, 사용자 책임).
 
 ## Hook 관점의 계약
 
 Shell script가 보는 최소 정보:
 - 변경 파일 리스트: `git diff --name-only`
 - 매핑 인덱스: 위 역매핑
-- 판별: 변경 파일이 인덱스에 있으면 해당 L3에 "잠재 drift". 세부 판단은 sync 스킬에 위임
+- 판별: 변경 파일이 인덱스에 있으면 해당 문서에 "잠재 drift". 세부 판단은 sync 스킬에 위임
 
 Hook은 매핑 유무만 확인, 내용 비교는 하지 않는다. 이것이 "값싼 heuristic"의 구체화.
 
 ## 비기능 요건
 
-- L3 문서 ≤ 수백 개 규모 전제. 그 이상이면 캐시 도입 고려 (현 단계 스킵)
+- 계약 문서 ≤ 수백 개 규모 전제. 그 이상이면 캐시 도입 고려 (현 단계 스킵)
 - frontmatter 파싱은 단순 YAML — 줄단위 읽기 + 블록 추출로 충분
 
 ## 검증
 
 규약이 깨지는 대표 케이스:
-1. L3 생성 시 `implements` 누락 → prior 엔진이 작성 시 강제할 것
+1. 계약 문서 생성 시 `implements` 누락 → prior 엔진이 작성 시 강제할 것
 2. 코드 이동/리네임 시 경로 stale → sync 스킬이 path not found로 리포트, 수정 제안
-3. 동일 코드가 여러 L3에 걸침 → 허용, 양쪽 모두 체크
+3. 동일 코드가 여러 문서에 걸침 → 허용, 양쪽 모두 체크
 
 ## 향후 확장 (지금은 하지 않음)
 
 - 심볼 단위 매핑 (`implements: [src/x.ts#MyClass.method]`)
 - 반대 방향 역참조 (코드 주석에 `@pyramid-doc` 태그)
 - glob 지원
-
-필요 증거가 모이기 전엔 넣지 않는다.

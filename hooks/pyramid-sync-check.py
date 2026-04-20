@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Pyramid sync Stop hook. Silent unless mapped L3 drift detected.
+"""Pyramid sync Stop hook. Silent unless mapped contract drift detected.
 
 Posts at most one short line. Caller (Claude) then decides whether to run
 /pyramid-sync. Does not analyze signatures — that's the skill's job.
@@ -37,19 +37,32 @@ def changed_files(root: Path) -> set[str]:
 
 
 FM_SPLIT = re.compile(r"^---\s*$", re.M)
-LAYER_L3 = re.compile(r"^layer:\s*L?3\s*$", re.M)
 IMPL_BLOCK = re.compile(r"^implements:\s*\n((?:[ \t]*-[ \t]*.+\n?)+)", re.M)
 IMPL_INLINE = re.compile(r"^implements:\s*\[(.+?)\]\s*$", re.M)
 
 
-def find_l3_docs(root: Path) -> list[Path]:
+def parse_implements(fm_text: str) -> list[str]:
+    m = IMPL_BLOCK.search(fm_text)
+    if m:
+        return [
+            ln.strip().lstrip("-").strip().strip("'\"")
+            for ln in m.group(1).splitlines()
+            if ln.strip()
+        ]
+    m = IMPL_INLINE.search(fm_text)
+    if m:
+        return [s.strip().strip("'\"") for s in m.group(1).split(",") if s.strip()]
+    return []
+
+
+def find_contract_docs(root: Path) -> list[Path]:
     # Override: user-supplied glob, trusted as-is
-    override = os.environ.get("PYRAMID_L3_GLOB", "").strip()
+    override = os.environ.get("PYRAMID_CONTRACT_GLOB", "").strip()
     if override:
         return [p for p in root.glob(override) if p.is_file()]
 
-    # Default: scan tracked .md files' frontmatter for `layer: L3`
-    # (respects .gitignore, path-convention agnostic — SSOT is the field itself)
+    # Default: scan tracked .md files' frontmatter for `implements:` field
+    # (respects .gitignore, layer-agnostic — SSOT is the field itself)
     tracked = [
         line.strip()
         for line in run(["git", "-C", str(root), "ls-files", "--", "*.md"]).splitlines()
@@ -65,23 +78,9 @@ def find_l3_docs(root: Path) -> list[Path]:
         parts = FM_SPLIT.split(head, maxsplit=2)
         if len(parts) < 3:
             continue
-        if LAYER_L3.search(parts[1]):
+        if parse_implements(parts[1]):
             docs.append(doc)
     return docs
-
-
-def parse_implements(fm_text: str) -> list[str]:
-    m = IMPL_BLOCK.search(fm_text)
-    if m:
-        return [
-            ln.strip().lstrip("-").strip().strip("'\"")
-            for ln in m.group(1).splitlines()
-            if ln.strip()
-        ]
-    m = IMPL_INLINE.search(fm_text)
-    if m:
-        return [s.strip().strip("'\"") for s in m.group(1).split(",") if s.strip()]
-    return []
 
 
 def build_index(docs: list[Path]) -> dict[str, list[str]]:
@@ -111,7 +110,7 @@ def main() -> None:
     if not changed:
         return
 
-    docs = find_l3_docs(root)
+    docs = find_contract_docs(root)
     if not docs:
         return
 
@@ -124,7 +123,7 @@ def main() -> None:
         return
 
     n = len(drift)
-    print(f"pyramid-sync: {n} changed file(s) mapped to L3 doc(s) — run /pyramid-sync to review")
+    print(f"pyramid-sync: {n} changed file(s) mapped to contract doc(s) — run /pyramid-sync to review")
 
 
 if __name__ == "__main__":
