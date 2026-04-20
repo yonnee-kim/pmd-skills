@@ -47,3 +47,5 @@ description: 계약 문서(L2 모듈 등)와 구현 코드 간 drift 감지·해
 
 - `implements` 누락된 문서는 인덱스에 없음 → 미탐지. prior 엔진(`pyramid`)에서 메타데이터 보강 요청
 - glob·심볼 단위 매핑은 현 단계에서 미지원 (규약 참조)
+- **Hook은 drift와 "동기화 Edit 직후 pending commit"을 구분 못함** — 문서를 방금 업데이트해서 의미상 정합 상태여도 git diff가 비어있지 않으면 hook이 또 fires. 커밋 후에야 조용해짐. 이건 기능(인식 시점이 commit 경계) — 버그 아님
+- **타입 필드 추가·수정은 drift 아님** — L2는 필드 수준 명세를 하지 않으므로 `Route`에 `tags` 필드 추가 같은 변경은 정합. 타입 이름 자체가 새로 export되거나 제거될 때만 공개 경계 drift로 간주
