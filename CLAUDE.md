@@ -5,24 +5,27 @@
 ## 편집 원칙
 
 1. **prior–posterior 분리 유지** — 스킬 한 개가 두 축을 섞지 않는다. 섞이려는 변화는 구조 재설계 신호
-2. **opus 가정 간결함** — 자명한 단계·중복 체크리스트·장황한 종료 조건 금지. 모든 문장이 load-bearing
-3. **단일 진실의 원천** — `shared/mapping-spec.md`는 hook과 스킬이 공유하는 단일 정본. 복붙 금지
+2. **opus 4.7 가정 간결함** — 자명한 단계·중복 체크리스트·장황한 종료 조건 금지. 모든 문장이 load-bearing
+3. **단일 진실의 원천** — `shared/mapping-spec.md`는 hook과 스킬이 공유하는 단일 정본 (SKILL.md 참조는 `${CLAUDE_PLUGIN_ROOT}/shared/mapping-spec.md`). 복붙 금지
 4. **자동 동기화 선호** — 수동 status 게이트·top-down RFI cascade를 도입하지 말 것. 자동 drift 감지로 해결
+5. **표 형식 금지** — 스킬·문서 어디에도 markdown 표(`|---|`) 쓰지 말 것. 행당 한 줄 리스트로. 셀 폭 정렬에 시선 낭비되고 편집 시 깨지기 쉬움
 
-## 파일 맵
+## 파일 맵 (Claude Code 플러그인)
 
-- `.claude/skills/pyramid/` — prior 엔진 (SKILL.md + layers/L{0..3}.md)
-- `.claude/skills/pyramid-sync/` — posterior 엔진 (SKILL.md)
-- `.claude/hooks/pyramid-sync-check.py` — Stop hook
-- `.claude/settings.json` — hook 등록
-- `shared/mapping-spec.md` — 매핑 규약 (hook·skill 공통 참조)
+- `.claude-plugin/plugin.json` — 플러그인 매니페스트
+- `skills/pyramid/` — prior 엔진 (SKILL.md + layers/L{0..3}.md)
+- `skills/pyramid-sync/` — posterior 엔진 (SKILL.md)
+- `hooks/hooks.json` — Stop hook 선언
+- `hooks/pyramid-sync-check.py` — Stop hook 스크립트
+- `shared/mapping-spec.md` — 매핑 규약 (hook·skill 공통 참조, `${CLAUDE_PLUGIN_ROOT}/shared/mapping-spec.md`)
 
 ## 테스트
 
-Hook 동작 확인:
+Hook 동작 확인 (직접 실행, 플러그인 로드 없이):
+
 ```
 # silent (매핑 없음)
-python3 .claude/hooks/pyramid-sync-check.py; echo $?
+python3 hooks/pyramid-sync-check.py; echo $?
 
 # positive (임시 레포에 L3 + implements 추가 후)
 ```

@@ -29,17 +29,16 @@ implements:
 
 Hook·sync 스킬은 전체 L3 문서를 스캔하여 `code_path → L3_doc_path` 맵을 구성한다.
 
-- 입력: `docs/**/L3/*.md` (기본값. 프로젝트에서 override 가능)
 - 출력: 메모리 내 dict. 파일 시스템 캐시 없음 (세션당 재계산, git diff 범위 작아서 무시 가능)
 - 충돌 처리: 같은 코드 파일이 2개 이상 L3에 `implements`로 걸리면 양쪽 모두 drift 체크 대상
 
 ## 문서 루트 탐색
 
-L3 문서 위치는 프로젝트마다 다를 수 있다. 탐색 순서:
-1. 레포 루트 `.pyramid/config.yaml`의 `l3_glob` (있으면)
-2. 기본값: `docs/**/L3/*.md`, `docs/L3/*.md`, `**/*.L3.md` 중 첫 매치
+L3 문서 위치 컨벤션은 `_docs/L3/*.md` (L0·L1·L2와 동일 루트 `_docs/` 하위).
 
-Config 없을 때 기본값 하나로 맞추기보다 복수 후보 탐색 — 초기 마찰 최소화.
+탐색은 content-based — path 관례가 아니라 **frontmatter `layer: L3`**가 SSOT 신호. 즉 `git ls-files *.md`로 tracked `.md`만 긁은 뒤 frontmatter에 `layer: L3`가 있는 것만 인덱스. gitignore 자동 존중, 관례 이탈(예: 모듈별 co-location `src/foo/_docs/bar.md`)도 자연스럽게 흡수.
+
+Override: 환경 변수 `PYRAMID_L3_GLOB` 설정 시 그 glob 결과만 사용 (content 체크 생략, 사용자 책임).
 
 ## Hook 관점의 계약
 

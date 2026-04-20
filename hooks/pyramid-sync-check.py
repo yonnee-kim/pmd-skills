@@ -36,20 +36,38 @@ def changed_files(root: Path) -> set[str]:
     return files
 
 
+FM_SPLIT = re.compile(r"^---\s*$", re.M)
+LAYER_L3 = re.compile(r"^layer:\s*L?3\s*$", re.M)
+IMPL_BLOCK = re.compile(r"^implements:\s*\n((?:[ \t]*-[ \t]*.+\n?)+)", re.M)
+IMPL_INLINE = re.compile(r"^implements:\s*\[(.+?)\]\s*$", re.M)
+
+
 def find_l3_docs(root: Path) -> list[Path]:
+    # Override: user-supplied glob, trusted as-is
     override = os.environ.get("PYRAMID_L3_GLOB", "").strip()
     if override:
         return [p for p in root.glob(override) if p.is_file()]
-    for pat in ("docs/**/L3/*.md", "docs/L3/*.md", "**/*.L3.md"):
-        matches = [p for p in root.glob(pat) if p.is_file()]
-        if matches:
-            return matches
-    return []
 
-
-FM_SPLIT = re.compile(r"^---\s*$", re.M)
-IMPL_BLOCK = re.compile(r"^implements:\s*\n((?:[ \t]*-[ \t]*.+\n?)+)", re.M)
-IMPL_INLINE = re.compile(r"^implements:\s*\[(.+?)\]\s*$", re.M)
+    # Default: scan tracked .md files' frontmatter for `layer: L3`
+    # (respects .gitignore, path-convention agnostic — SSOT is the field itself)
+    tracked = [
+        line.strip()
+        for line in run(["git", "-C", str(root), "ls-files", "--", "*.md"]).splitlines()
+        if line.strip()
+    ]
+    docs: list[Path] = []
+    for rel in tracked:
+        doc = root / rel
+        try:
+            head = doc.read_text(encoding="utf-8", errors="ignore")[:2048]
+        except Exception:
+            continue
+        parts = FM_SPLIT.split(head, maxsplit=2)
+        if len(parts) < 3:
+            continue
+        if LAYER_L3.search(parts[1]):
+            docs.append(doc)
+    return docs
 
 
 def parse_implements(fm_text: str) -> list[str]:

@@ -1,0 +1,4 @@
+{
+  "name": "pmd-skills",
+  "description": "prior-posterior 분리된 문서 피라미드(L0~L3) skills + doc-code drift 자동 감지 hook"
+}

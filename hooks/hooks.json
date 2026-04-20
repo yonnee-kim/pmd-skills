@@ -2,10 +2,11 @@
   "hooks": {
     "Stop": [
       {
+        "matcher": "",
         "hooks": [
           {
             "type": "command",
-            "command": "python3 ${CLAUDE_PROJECT_DIR}/.claude/hooks/pyramid-sync-check.py"
+            "command": "python3 ${CLAUDE_PLUGIN_ROOT}/hooks/pyramid-sync-check.py"
           }
         ]
       }

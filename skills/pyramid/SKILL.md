@@ -13,12 +13,10 @@ posterior(doc↔code 정합성)는 `pyramid-sync`와 Stop hook의 몫 — 여기
 
 프로젝트 상태를 먼저 Glob/Read로 파악하고 사용자 요청과 결합해 분기.
 
-| 관찰                                                        | 모드          | 주된 행동                                     |
-| ----------------------------------------------------------- | ------------- | --------------------------------------------- |
-| `_docs/L0-vision/`·동등 경로 없음                           | `init`        | L0부터 대화로 채움                            |
-| L0 있음, 사용자가 다음 레이어 작성 요청                     | `draft`       | 상위 레이어 Read → 타겟 레이어 초안           |
-| 대상 문서 이미 존재, 사용자가 리뷰/개선 요청                | `improve`     | 원칙 대조, 질문으로 밀도 올림                 |
-| 코드만 있고 L3 없음, 사용자가 "기존 코드 문서화" 요청       | `migration`   | 코드 읽고 L3부터 역설계, `implements` 채움    |
+- `init` — `_docs/L0-vision/`·동등 경로 없음 → L0부터 대화로 채움
+- `draft` — L0 있음, 사용자가 다음 레이어 작성 요청 → 상위 레이어 Read → 타겟 레이어 초안
+- `improve` — 대상 문서 이미 존재, 사용자가 리뷰/개선 요청 → 원칙 대조, 질문으로 밀도 올림
+- `migration` — 코드만 있고 L3 없음, "기존 코드 문서화" 요청 → 코드 읽고 L3부터 역설계, `implements` 채움
 
 사용자 명시가 있으면 그쪽이 우선. 분기 선택의 자신 없으면 사용자에게 확인.
 
@@ -39,7 +37,7 @@ posterior(doc↔code 정합성)는 `pyramid-sync`와 Stop hook의 몫 — 여기
 - **캘리브레이션**: "항상/절대" 대신 "대개/보통". Opus 4.7은 뉘앙스를 다룬다
 - **단일 진실의 원천**: 같은 내용을 두 곳에 쓰지 말 것 (리서치 후 확인)
 - **미해결은 미해결로**: 결정되지 않은 것을 결정된 것처럼 쓰지 말 것. `TODO(why)` 허용
-- **매핑은 L3에만**: `implements:` frontmatter는 L3 계약에만 — `shared/mapping-spec.md` 준수
+- **매핑은 L3에만**: `implements:` frontmatter는 L3 계약에만 — `${CLAUDE_PLUGIN_ROOT}/shared/mapping-spec.md` 준수
 
 ## 질문으로 prior를 밀도 있게
 
@@ -70,6 +68,6 @@ posterior(doc↔code 정합성)는 `pyramid-sync`와 Stop hook의 몫 — 여기
 ## Gotchas
 
 - 레이어 경계 위반은 가장 흔한 문제. L1에 모듈명이 나오면 경고, L2에 시그니처가 나오면 경고, L3에 원칙이 나오면 경고
-- `implements:` 경로는 레포 루트 기준 상대 경로. glob·심볼 단위 금지 (`shared/mapping-spec.md` 참조)
+- `implements:` 경로는 레포 루트 기준 상대 경로. glob·심볼 단위 금지 (`${CLAUDE_PLUGIN_ROOT}/shared/mapping-spec.md` 참조)
 - 매핑 누락은 posterior 쪽이 drift를 탐지하지 못한다는 뜻 — L3 생성 시 반드시 `implements` 포함 여부 체크
 - "문서를 위한 문서"는 쓰지 말 것. 각 문서가 실제로 prior로 기능하는지 — 모델이 이걸 읽고 다르게 행동할지 — 자문할 것
