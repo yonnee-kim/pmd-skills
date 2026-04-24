@@ -1,5 +1,9 @@
 {
   "name": "pmd-skills",
   "version": "0.1.0",
-  "description": "prior-posterior 분리된 문서 피라미드(L0~L2) skills + doc-code drift 자동 감지 hook"
+  "description": "prior-posterior 분리된 문서 피라미드(L0~L2) skills + doc-code drift 자동 감지 hook",
+  "author": {
+    "name": "yonnee-kim",
+    "url": "https://github.com/yonnee-kim"
+  }
 }

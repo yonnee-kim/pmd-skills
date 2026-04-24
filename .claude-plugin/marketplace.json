@@ -1,5 +1,8 @@
 {
   "name": "pmd-skills",
+  "metadata": {
+    "description": "문서 피라미드(prior–posterior 분리) 방법론 Claude Code 플러그인 배포 채널"
+  },
   "owner": {
     "name": "yonnee-kim",
     "url": "https://github.com/yonnee-kim"
